@@ -19,6 +19,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF  OR IN CONNECTION WITH  THE CODE OR THE  USE OR OTHER  DEALINGS IN THE
 # CODE.
+#
+# 2009-02-20:  Modified by Pablo Lorenzoni <pablo@propus.com.br>  to  correctly
+# include the version in the raw_bytes.
 
 
 %w[
@@ -58,10 +61,12 @@ class UUID
 			sum = sha1.digest
 			raw = mask sum[0..15]
 			ret = new raw
+			ret = set_version 5, ret
 			ret.raw_bytes.freeze
 			ret.freeze
 			ret
 		end
+		alias :create_v5 :create_sha1
 
 		# UUID generation using MD5 (for backward compat.)
 		def create_md5 str, namespace
@@ -71,10 +76,12 @@ class UUID
 			sum = md5.digest
 			raw = mask sum[0..16]
 			ret = new raw
+			ret = set_version 3, ret
 			ret.raw_bytes.freeze
 			ret.freeze
 			ret
 		end
+		alias :create_v3 :create_md5
 
 		# UUID  generation  using  random-number  generator.   From  it's  random
 		# nature, there's  no warranty that  the created ID is  really universaly
@@ -88,9 +95,19 @@ class UUID
 			].pack "N4"
 			raw = mask rnd
 			ret = new raw
+			ret = set_version 4, ret
 			ret.raw_bytes.freeze
 			ret.freeze
 			ret
+		end
+		alias :create_v4 :create_random
+
+		def set_version v, s
+			v = "#{v}000".to_i(16)
+			arr = s.unpack
+			arr[2] &= 0x0FFF
+			arr[2] |= v
+			pack *arr
 		end
 
 		def read_state fp			  # :nodoc:
@@ -104,7 +121,7 @@ class UUID
 			fp.write str
 		end
 
-		private :read_state, :write_state
+		private :read_state, :write_state, :set_version
 		STATE_FILE = 'ruby-uuid'
 
 		# create  the "version  1" UUID  with current  system clock,  current UTC
@@ -166,6 +183,7 @@ class UUID
 			ch = ch | 0x80
 			pack tl, tm, th, cl, ch, m
 		end
+		alias :create_v1 :create
 
       def string *a, &b
         create(*a, &b).to_s
