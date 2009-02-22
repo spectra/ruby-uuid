@@ -243,6 +243,15 @@ class UUID
 	end
 	alias to_i to_int
 
+	# Gets the version of this UUID
+	# returns nil if bad version
+	def version
+		a = unpack
+		v = (a[2] & 0xF000).to_s(16)[0].chr.to_i
+		return v if (1..5).include? v
+		return nil
+	end
+
 	# Two  UUIDs  are  said  to  be  equal if  and  only  if  their  (byte-order
 	# canonicalized) integer representations are equivallent.  Refer RFC4122 for
 	# details.
