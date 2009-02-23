@@ -355,6 +355,17 @@ if __FILE__ == $0 then
 			u1 = UUID.parse "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 			assert_equal 0x6ba7b8109dad11d180b400c04fd430c8, u1.to_i
 		end
+
+		def test_version
+		   u1 = UUID.create_v1
+			assert_equal 1, u1.version
+			u3 = UUID.create_v3 "foo", UUID::NameSpace_DNS
+			assert_equal 3, u3.version
+			u4 = UUID.create_v4
+			assert_equal 4, u4.version
+			u5 = UUID.create_v5 "foo", UUID::NameSpace_DNS
+			assert_equal 5, u5.version
+		end
 	end
 end
 
