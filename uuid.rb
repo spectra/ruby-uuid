@@ -27,7 +27,6 @@
 %w[
 	digest/md5
 	digest/sha1
-	socket
 	tmpdir
 ].each do |f|
 	require f
@@ -357,7 +356,7 @@ if __FILE__ == $0 then
 		end
 
 		def test_version
-		   u1 = UUID.create_v1
+			u1 = UUID.create_v1
 			assert_equal 1, u1.version
 			u3 = UUID.create_v3 "foo", UUID::NameSpace_DNS
 			assert_equal 3, u3.version
