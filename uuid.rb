@@ -24,13 +24,9 @@
 # include the version in the raw_bytes.
 
 
-%w[
-	digest/md5
-	digest/sha1
-	tmpdir
-].each do |f|
-	require f
-end
+require 'digest/md5'
+require 'digest/sha1'
+require 'tmpdir'
 
 # Pure ruby UUID generator, which is compatible with RFC4122
 UUID = Struct.new "UUID", :raw_bytes
