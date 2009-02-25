@@ -29,12 +29,16 @@ require 'digest/sha1'
 require 'tmpdir'
 
 # Pure ruby UUID generator, which is compatible with RFC4122
-UUID = Struct.new "UUID", :raw_bytes
+UUID = Struct.new :raw_bytes
+
 class UUID
 	private_class_method :new
 
 	class << self
-		def mask str # :nodoc
+		def mask v, str # :nodoc
+			version = [0, 16, 32, 48, 64, 80][v]
+			str[6] &= 0b00001111
+			str[6] |= version
 			str[7] &= 0b00001111
 			str[7] |= 0b01010000
 			str[8] &= 0b00111111
@@ -50,9 +54,8 @@ class UUID
 			sha1.update namespace.raw_bytes
 			sha1.update str
 			sum = sha1.digest
-			raw = mask sum[0..15]
+			raw = mask 5, sum[0..15]
 			ret = new raw
-			ret = set_version 5, ret
 			ret.freeze
 			ret
 		end
@@ -64,9 +67,8 @@ class UUID
 			md5.update namespace.raw_bytes
 			md5.update str
 			sum = md5.digest
-			raw = mask sum[0..16]
+			raw = mask 3, sum[0..16]
 			ret = new raw
-			ret = set_version 3, ret
 			ret.freeze
 			ret
 		end
@@ -82,21 +84,12 @@ class UUID
 				rand(0x100000000),
 				rand(0x100000000),
 			].pack "N4"
-			raw = mask rnd
+			raw = mask 4, rnd
 			ret = new raw
-			ret = set_version 4, ret
 			ret.freeze
 			ret
 		end
 		alias :create_v4 :create_random
-
-		def set_version v, s
-			v = "#{v}000".to_i(16)
-			arr = s.unpack
-			arr[2] &= 0x0FFF
-			arr[2] |= v
-			pack *arr
-		end
 
 		def read_state fp			  # :nodoc:
 			fp.rewind
@@ -109,7 +102,7 @@ class UUID
 			fp.write str
 		end
 
-		private :read_state, :write_state, :set_version
+		private :read_state, :write_state
 		STATE_FILE = 'ruby-uuid'
 
 		# create  the "version  1" UUID  with current  system clock,  current UTC
@@ -133,7 +126,7 @@ class UUID
 						sha1.update r
 					end
 					str = sha1.digest
-					r = rand 34 # 40-6
+					r = rand 14 # 20-6
 					node = str[r, 6] || str
 					node[0] |= 0x01 # multicast bit
 					k = rand 0x40000
