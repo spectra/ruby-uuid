@@ -39,14 +39,10 @@ class UUID
 
 	class << self
 		def mask str # :nodoc
-			v = str[7]
-			v = v & 0b00001111
-			v = v | 0b01010000
-			str[7] = v
-			r = str[8]
-			r = r & 0b00111111
-			r = r | 0b10000000
-			str[8] = r
+			str[7] &= 0b00001111
+			str[7] |= 0b01010000
+			str[8] &= 0b00111111
+			str[8] |= 0b10000000
 			str
 		end
 		private :mask
@@ -61,7 +57,6 @@ class UUID
 			raw = mask sum[0..15]
 			ret = new raw
 			ret = set_version 5, ret
-			ret.raw_bytes.freeze
 			ret.freeze
 			ret
 		end
@@ -76,7 +71,6 @@ class UUID
 			raw = mask sum[0..16]
 			ret = new raw
 			ret = set_version 3, ret
-			ret.raw_bytes.freeze
 			ret.freeze
 			ret
 		end
@@ -95,7 +89,6 @@ class UUID
 			raw = mask rnd
 			ret = new raw
 			ret = set_version 4, ret
-			ret.raw_bytes.freeze
 			ret.freeze
 			ret
 		end
@@ -184,10 +177,6 @@ class UUID
 		end
 		alias :create_v1 :create
 
-      def string *a, &b
-        create(*a, &b).to_s
-      end
-
 		# A  simple GUID  parser:  just ignores  unknown  characters and  convert
 		# hexadecimal dump into 16-octet object.
 		def parse obj
@@ -195,7 +184,6 @@ class UUID
 			str.gsub! %r/[^0-9A-Fa-f]/, ''
 			raw = str[0..31].to_a.pack 'H*'
 			ret = new raw
-			ret.raw_bytes.freeze
 			ret.freeze
 			ret
 		end
@@ -205,7 +193,6 @@ class UUID
 		def pack tl, tm, th, ch, cl, n
 			raw = [tl, tm, th, ch, cl, n].pack "NnnCCa6"
 			ret = new raw
-			ret.raw_bytes.freeze
 			ret.freeze
 			ret
 		end
