@@ -35,7 +35,21 @@ class UUID
 	private_class_method :new
 
 	class << self
-		def mask v, str # :nodoc
+		def mask19 v, str # :nodoc
+			nstr = str.bytes.to_a
+			version = [0, 16, 32, 48, 64, 80][v]
+			nstr[6] &= 0b00001111
+			nstr[6] |= version
+			nstr[7] &= 0b00001111
+			nstr[7] |= 0b01010000
+			nstr[8] &= 0b00111111
+			nstr[8] |= 0b10000000
+			str = ''
+			nstr.each { |s| str << s.chr }
+			str
+		end
+
+		def mask18 v, str # :nodoc
 			version = [0, 16, 32, 48, 64, 80][v]
 			str[6] &= 0b00001111
 			str[6] |= version
@@ -45,7 +59,15 @@ class UUID
 			str[8] |= 0b10000000
 			str
 		end
-		private :mask
+
+		def mask v, str
+			if RUBY_VERSION >= "1.9.0"
+				return mask19 v, str
+			else
+				return mask18 v, str
+			end
+		end
+		private :mask, :mask18, :mask19
 
 		# UUID generation using SHA1. Recommended over create_md5.
 		# Namespace object is another UUID, some of them are pre-defined below.
@@ -171,7 +193,7 @@ class UUID
 		def parse obj
 			str = obj.to_s.sub %r/\Aurn:uuid:/, ''
 			str.gsub! %r/[^0-9A-Fa-f]/, ''
-			raw = str[0..31].to_a.pack 'H*'
+			raw = str[0..31].lines.to_a.pack 'H*'
 			ret = new raw
 			ret.freeze
 			ret
