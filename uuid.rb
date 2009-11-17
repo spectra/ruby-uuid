@@ -150,7 +150,14 @@ class UUID
 					str = sha1.digest
 					r = rand 14 # 20-6
 					node = str[r, 6] || str
-					node[0] |= 0x01 # multicast bit
+					if RUBY_VERSION >= "1.9.0"
+						nnode = node.bytes.to_a
+						nnode[0] |= 0x01
+						node = ''
+						nnode.each { |s| node << s.chr }
+					else
+						node[0] |= 0x01 # multicast bit
+					end
 					k = rand 0x40000
 					open STATE_FILE, 'w' do |fp|
 						fp.flock IO::LOCK_EX
